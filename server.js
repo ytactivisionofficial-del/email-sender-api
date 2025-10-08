@@ -12,7 +12,10 @@ const API_KEY = process.env.API_KEY;
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' directory
+
+// Serve static files from 'public' directory
+// Yeh line 'index.html', 'style.css', aur 'script.js' ko apne aap serve kar degi
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Nodemailer transporter setup
 const transporter = nodemailer.createTransport({
@@ -21,11 +24,6 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
-});
-
-// Serve the frontend
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/api-key', (req, res) => {
