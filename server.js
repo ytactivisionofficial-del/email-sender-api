@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { Resend } = require('resend'); // Nodemailer ki jagah Resend import karo
+const { Resend } = require('resend');
 const path = require('path');
 const cors = require('cors');
 
@@ -8,7 +8,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_KEY;
 
-// Resend ko API key ke saath initialize karo
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Middleware
@@ -21,17 +20,19 @@ app.get('/api-key', (req, res) => {
     res.json({ apiKey: API_KEY });
 });
 
-// Email sending route (Resend ke liye update kiya gaya)
+// Email sending route
 app.post('/send-email', async (req, res) => {
-    const { to, subject, message } = req.body;
+    // FROM field ko request se extract karo
+    const { from, to, subject, message } = req.body;
 
-    if (!to || !subject || !message) {
-        return res.status(400).json({ error: 'All fields are required: to, subject, message' });
+    // FROM field ko bhi check karo
+    if (!from || !to || !subject || !message) {
+        return res.status(400).json({ error: 'All fields are required: from, to, subject, message' });
     }
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'onboarding@resend.dev', // Resend testing ke liye yeh email use karta hai
+            from: from, // Yahan 'from' ko use karo
             to: [to],
             subject: subject,
             html: message
@@ -49,21 +50,22 @@ app.post('/send-email', async (req, res) => {
     }
 });
 
-// API endpoint for external websites (Resend ke liye update kiya gaya)
+
+// API endpoint for external websites
 app.post('/api/send-email', async (req, res) => {
-    const { apiKey, recipientEmail, emailSubject, emailMessage } = req.body;
+    const { apiKey, fromEmail, recipientEmail, emailSubject, emailMessage } = req.body;
 
     if (apiKey !== API_KEY) {
         return res.status(401).json({ error: 'Unauthorized: Invalid API Key' });
     }
 
-    if (!recipientEmail || !emailSubject || !emailMessage) {
-        return res.status(400).json({ error: 'All fields are required: recipientEmail, emailSubject, emailMessage' });
+    if (!fromEmail || !recipientEmail || !emailSubject || !emailMessage) {
+        return res.status(400).json({ error: 'All fields are required: fromEmail, recipientEmail, emailSubject, emailMessage' });
     }
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'onboarding@resend.dev', // Resend testing ke liye yeh email use karta hai
+            from: fromEmail,
             to: [recipientEmail],
             subject: emailSubject,
             html: emailMessage
@@ -80,6 +82,7 @@ app.post('/api/send-email', async (req, res) => {
         res.status(500).json({ error: 'Failed to send email via API', details: error.message });
     }
 });
+
 
 // Start the server
 app.listen(PORT, () => {
