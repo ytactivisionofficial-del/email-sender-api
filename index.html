@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Email</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Send Email</h1>
+        <form id="emailForm">
+            <label for="from">From Email (Resend ke liye "onboarding@resend.dev"):</label>
+            <input type="email" id="from" name="from" value="onboarding@resend.dev" required>
+
+            <label for="to">Recipient Email:</label>
+            <input type="email" id="to" name="to" required>
+
+            <label for="subject">Subject:</label>
+            <input type="text" id="subject" name="subject" required>
+
+            <label for="message">Message (HTML allowed):</label>
+            <textarea id="message" name="message" rows="10" required></textarea>
+
+            <button type="submit">Send Email</button>
+        </form>
+        <div id="responseMessage"></div>
+
+        <div class="api-key-display">
+            <h2>Your API Key:</h2>
+            <input type="text" id="apiKeyDisplay" readonly>
+            <button id="copyApiKey">Copy API Key</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
