@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend'); // Nodemailer ki jagah Resend import karo
 const path = require('path');
 const cors = require('cors');
 
@@ -8,29 +8,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_KEY;
 
+// Resend ko API key ke saath initialize karo
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 // Middleware
-app.use(cors()); // Enable CORS for all routes
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve static files from 'public' directory
-// Yeh line 'index.html', 'style.css', aur 'script.js' ko apne aap serve kar degi
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Nodemailer transporter setup
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
 
 app.get('/api-key', (req, res) => {
     res.json({ apiKey: API_KEY });
 });
 
-// Email sending route
+// Email sending route (Resend ke liye update kiya gaya)
 app.post('/send-email', async (req, res) => {
     const { to, subject, message } = req.body;
 
@@ -39,22 +30,26 @@ app.post('/send-email', async (req, res) => {
     }
 
     try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: to,
+        const { data, error } = await resend.emails.send({
+            from: 'onboarding@resend.dev', // Resend testing ke liye yeh email use karta hai
+            to: [to],
             subject: subject,
-            html: message // Use html for rich text/HTML content
-        };
+            html: message
+        });
 
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({ message: 'Email sent successfully!' });
+        if (error) {
+            console.error('Error sending email:', error);
+            return res.status(400).json({ error: 'Failed to send email', details: error });
+        }
+
+        res.status(200).json({ message: 'Email sent successfully!', data });
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Critical error:', error);
         res.status(500).json({ error: 'Failed to send email', details: error.message });
     }
 });
 
-// API endpoint for external websites
+// API endpoint for external websites (Resend ke liye update kiya gaya)
 app.post('/api/send-email', async (req, res) => {
     const { apiKey, recipientEmail, emailSubject, emailMessage } = req.body;
 
@@ -67,17 +62,21 @@ app.post('/api/send-email', async (req, res) => {
     }
 
     try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: recipientEmail,
+        const { data, error } = await resend.emails.send({
+            from: 'onboarding@resend.dev', // Resend testing ke liye yeh email use karta hai
+            to: [recipientEmail],
             subject: emailSubject,
             html: emailMessage
-        };
+        });
 
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({ message: 'Email sent successfully via API!' });
+        if (error) {
+            console.error('Error sending email via API:', error);
+            return res.status(400).json({ error: 'Failed to send email via API', details: error });
+        }
+
+        res.status(200).json({ message: 'Email sent successfully via API!', data });
     } catch (error) {
-        console.error('Error sending email via API:', error);
+        console.error('Critical error via API:', error);
         res.status(500).json({ error: 'Failed to send email via API', details: error.message });
     }
 });
