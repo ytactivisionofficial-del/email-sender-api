@@ -1,9 +1,8 @@
 document.getElementById('emailForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
-    // Ek 'from' email add karo. Resend ke free plan ke liye,
-    // yeh 'onboarding@resend.dev' hi hona chahiye.
-    const from = 'onboarding@resend.dev';
+    // 'from' field ko HTML form se le raha hai
+    const from = document.getElementById('from').value;
     const to = document.getElementById('to').value;
     const subject = document.getElementById('subject').value;
     const message = document.getElementById('message').value;
