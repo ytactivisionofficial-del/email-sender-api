@@ -1,13 +1,19 @@
 document.getElementById('emailForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
+    // 'from' field ko HTML form se le raha hai
+    const from = document.getElementById('from').value;
     const to = document.getElementById('to').value;
     const subject = document.getElementById('subject').value;
     const message = document.getElementById('message').value;
     const responseMessage = document.getElementById('responseMessage');
+    const sendButton = event.target.querySelector('button[type="submit"]');
 
     responseMessage.textContent = 'Sending email...';
     responseMessage.style.color = 'blue';
+    sendButton.disabled = true;
+    sendButton.textContent = 'Sending...';
+
 
     try {
         const response = await fetch('/send-email', {
@@ -15,7 +21,8 @@ document.getElementById('emailForm').addEventListener('submit', async function(e
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ to, subject, message })
+            // 'from' field ko body me bhejo
+            body: JSON.stringify({ from, to, subject, message })
         });
 
         const data = await response.json();
@@ -25,13 +32,16 @@ document.getElementById('emailForm').addEventListener('submit', async function(e
             responseMessage.style.color = 'green';
             document.getElementById('emailForm').reset(); // Clear form
         } else {
-            responseMessage.textContent = `Error: ${data.error || 'Unknown error'}`;
+            responseMessage.textContent = `Error: ${data.error || 'Unknown error'}. ${data.details ? JSON.stringify(data.details) : ''}`;
             responseMessage.style.color = 'red';
         }
     } catch (error) {
         console.error('Fetch error:', error);
         responseMessage.textContent = 'Network error or server is unreachable.';
         responseMessage.style.color = 'red';
+    } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = 'Send Email';
     }
 });
 
@@ -57,9 +67,11 @@ document.getElementById('copyApiKey').addEventListener('click', function() {
     const apiKeyInput = document.getElementById('apiKeyDisplay');
     apiKeyInput.select();
     apiKeyInput.setSelectionRange(0, 99999); // For mobile devices
-    document.execCommand('copy');
-    alert('API Key copied to clipboard!');
+    navigator.clipboard.writeText(apiKeyInput.value).then(() => {
+        alert('API Key copied to clipboard!');
+    });
 });
+
 
 // Call fetchApiKey when the page loads
 document.addEventListener('DOMContentLoaded', fetchApiKey);
